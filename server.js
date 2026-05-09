@@ -24,6 +24,9 @@ app.use(express.json());
 app.use(cors());
 
 app.use(express.static('public'));
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/login.html');
+});
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
