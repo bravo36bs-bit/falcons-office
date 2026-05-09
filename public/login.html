@@ -1,184 +1,171 @@
 
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Falcons Office</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <link rel="stylesheet" href="style.css">
+<title>Falcons Office</title>
+
+<link rel="stylesheet" href="style.css">
+
 </head>
 
 <body class="login-page">
 
-  <div class="login-box">
+<div class="login-box">
 
-    <h1>Falcons</h1>
-    <p>Private Secure Messaging</p>
-
-    <input
-      type="text"
-      id="username"
-      placeholder="اسم المستخدم"
-    >
+    <h1 class="logo">Falcons</h1>
+    <p class="subtitle">Private Secure Messaging</p>
 
     <input
-      type="password"
-      id="password"
-      placeholder="كلمة المرور"
+        type="text"
+        id="username"
+        placeholder="Username"
     >
 
-    <button onclick="login()">
-      دخول
-    </button>
-
-    <button
-      onclick="register()"
-      style="
-      margin-top:10px;
-      background:#111;
-      color:white;
-      border:1px solid #00ff99;
-      "
+    <input
+        type="password"
+        id="password"
+        placeholder="Password"
     >
-      إنشاء حساب
+
+    <button id="mainBtn" onclick="submitForm()">
+        Login
     </button>
 
-  </div>
+    <p class="switch-mode">
+        <span id="switchText">
+            Don't have an account?
+        </span>
 
-  <script>
+        <a href="#" onclick="toggleMode()"
+           id="switchBtn">
+           Create Account
+        </a>
+    </p>
 
-    const API = '/api';
+</div>
 
-    async function login() {
+<script>
 
-      const username =
+const API = '';
+
+let isLogin = true;
+
+function toggleMode() {
+
+    isLogin = !isLogin;
+
+    const btn = document.getElementById('mainBtn');
+    const switchText = document.getElementById('switchText');
+    const switchBtn = document.getElementById('switchBtn');
+
+    if (isLogin) {
+
+        btn.innerText = 'Login';
+
+        switchText.innerText =
+            "Don't have an account?";
+
+        switchBtn.innerText =
+            'Create Account';
+
+    } else {
+
+        btn.innerText = 'Create Account';
+
+        switchText.innerText =
+            'Already have an account?';
+
+        switchBtn.innerText =
+            'Login';
+
+    }
+}
+
+async function submitForm() {
+
+    const username =
         document.getElementById('username').value;
 
-      const password =
+    const password =
         document.getElementById('password').value;
 
-      if (!username || !password) {
-        alert('املأ جميع الحقول');
+    if (!username || !password) {
+
+        alert('Fill all fields');
+
         return;
-      }
+    }
 
-      try {
+    try {
 
-        const res = await fetch(`${API}/login`, {
+        const endpoint =
+            isLogin
+            ? '/api/login'
+            : '/api/register';
 
-          method: 'POST',
+        const res = await fetch(endpoint, {
 
-          headers: {
-            'Content-Type': 'application/json'
-          },
+            method: 'POST',
 
-          body: JSON.stringify({
-            username,
-            password
-          })
+            headers: {
+                'Content-Type': 'application/json'
+            },
 
+            body: JSON.stringify({
+                username,
+                password
+            })
         });
 
         const data = await res.json();
 
-        if (data.success) {
+        if (!data.success) {
 
-          localStorage.setItem(
-            'userId',
-            data.id
-          );
+            alert(
+                data.message ||
+                data.error ||
+                'Request failed'
+            );
 
-          localStorage.setItem(
-            'username',
-            data.username
-          );
-
-          window.location.href =
-            'dashboard.html';
-
-        } else {
-
-          alert(
-            data.message ||
-            'فشل تسجيل الدخول'
-          );
-
+            return;
         }
 
-      } catch (error) {
+        if (!isLogin) {
 
-        console.log(error);
+            alert('Account created successfully');
 
-        alert('Server Error');
+            toggleMode();
 
-      }
-
-    }
-
-
-
-    async function register() {
-
-      const username =
-        document.getElementById('username').value;
-
-      const password =
-        document.getElementById('password').value;
-
-      if (!username || !password) {
-
-        alert('املأ جميع الحقول');
-        return;
-
-      }
-
-      try {
-
-        const res = await fetch(`${API}/register`, {
-
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json'
-          },
-
-          body: JSON.stringify({
-            username,
-            password
-          })
-
-        });
-
-        const data = await res.json();
-
-        if (data.success) {
-
-          alert('تم إنشاء الحساب');
-
-        } else {
-
-          alert(
-            data.message ||
-            'فشل إنشاء الحساب'
-          );
-
+            return;
         }
 
-      } catch (error) {
+        localStorage.setItem(
+            'token',
+            data.token
+        );
 
-        console.log(error);
+        localStorage.setItem(
+            'user',
+            JSON.stringify(data.user)
+        );
 
-        alert('Server Error');
+        window.location.href =
+            '/dashboard.html';
 
-      }
+    } catch (err) {
+
+        console.log(err);
+
+        alert('Server error');
 
     }
+}
 
-  </script>
+</script>
 
 </body>
-
 </html>
 

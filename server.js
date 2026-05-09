@@ -1,45 +1,90 @@
 
+require('dotenv').config();
+
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const fs = require('fs');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: '*'
+  }
+});
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
-const db = mysql.createConnection({
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads');
+}
+
+const SECRET = process.env.JWT_SECRET;
+
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT
+  port: process.env.DB_PORT,
+  waitForConnections: true,
+  connectionLimit: 10
 });
 
-db.connect((err) => {
-  if (err) {
-    console.log('Database error:', err);
-  } else {
-    console.log('MySQL Connected');
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + '-' + file.originalname);
   }
 });
 
+const upload = multer({ storage });
 
-// ======================
-// HOME
-// ======================
+function auth(req, res, next) {
+
+  const token = req.headers.authorization?.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      error: 'Unauthorized'
+    });
+  }
+
+  try {
+
+    const decoded = jwt.verify(token, SECRET);
+
+    req.user = decoded;
+
+    next();
+
+  } catch {
+
+    return res.status(401).json({
+      error: 'Invalid token'
+    });
+
+  }
+}
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-
-// ======================
-// REGISTER
-// ======================
+// ================= REGISTER =================
 
 app.post('/api/register', async (req, res) => {
 
@@ -50,178 +95,247 @@ app.post('/api/register', async (req, res) => {
     if (!username || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Missing data'
+        message: 'Missing fields'
       });
     }
 
-    db.query(
+    const [countRows] = await db.query(
+      'SELECT COUNT(*) AS total FROM users'
+    );
+
+    if (countRows[0].total >= 4) {
+      return res.status(403).json({
+        success: false,
+        message: 'Registration closed'
+      });
+    }
+
+    const [existing] = await db.query(
+      'SELECT id FROM users WHERE username = ?',
+      [username]
+    );
+
+    if (existing.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username already exists'
+      });
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    await db.query(
+      'INSERT INTO users (username, password, is_online) VALUES (?, ?, 0)',
+      [username, hashed]
+    );
+
+    res.json({
+      success: true
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false
+    });
+  }
+});
+
+// ================= LOGIN =================
+
+app.post('/api/login', async (req, res) => {
+
+  try {
+
+    const { username, password } = req.body;
+
+    const [rows] = await db.query(
       'SELECT * FROM users WHERE username = ?',
-      [username],
-      async (err, result) => {
+      [username]
+    );
 
-        if (err) {
-          return res.status(500).json({
-            success: false
-          });
-        }
+    if (rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
 
-        if (result.length > 0) {
-          return res.status(400).json({
-            success: false,
-            message: 'User already exists'
-          });
-        }
+    const user = rows[0];
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const valid = await bcrypt.compare(
+      password,
+      user.password
+    );
 
-        db.query(
-          'INSERT INTO users (username, password, is_online) VALUES (?, ?, 0)',
-          [username, hashedPassword],
-          (err2) => {
+    if (!valid) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
 
-            if (err2) {
-              return res.status(500).json({
-                success: false
-              });
-            }
+    await db.query(
+      'UPDATE users SET is_online = 1 WHERE id = ?',
+      [user.id]
+    );
 
-            res.json({
-              success: true
-            });
-
-          }
-        );
-
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username
+      },
+      SECRET,
+      {
+        expiresIn: '7d'
       }
     );
 
-  } catch (error) {
+    io.emit('status_update');
+
+    res.json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        username: user.username
+      }
+    });
+
+  } catch (err) {
+
+    console.log(err);
 
     res.status(500).json({
       success: false
     });
 
   }
-
 });
 
+// ================= FRIEND REQUEST =================
 
-// ======================
-// LOGIN
-// ======================
+app.post('/api/send-request', auth, async (req, res) => {
 
-app.post('/api/login', (req, res) => {
+  try {
 
-  const { username, password } = req.body;
+    const { friendName } = req.body;
 
-  db.query(
-    'SELECT * FROM users WHERE username = ?',
-    [username],
-    async (err, result) => {
+    const [friendRows] = await db.query(
+      'SELECT id FROM users WHERE username = ?',
+      [friendName]
+    );
 
-      if (err) {
-        return res.status(500).json({
-          success: false
-        });
-      }
-
-      if (result.length === 0) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid credentials'
-        });
-      }
-
-      const user = result[0];
-
-      const match = await bcrypt.compare(
-        password,
-        user.password
-      );
-
-      if (!match) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid credentials'
-        });
-      }
-
-      db.query(
-        'UPDATE users SET is_online = 1 WHERE id = ?',
-        [user.id]
-      );
-
-      res.json({
-        success: true,
-        id: user.id,
-        username: user.username
+    if (friendRows.length === 0) {
+      return res.json({
+        success: false,
+        error: 'User not found'
       });
-
     }
-  );
 
+    const friendId = friendRows[0].id;
+
+    await db.query(
+      'INSERT INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)',
+      [req.user.id, friendId]
+    );
+
+    io.emit('friend_request', {
+      from: req.user.username
+    });
+
+    res.json({
+      success: true
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.json({
+      success: false,
+      error: 'Request failed'
+    });
+
+  }
 });
 
+// ================= GET REQUESTS =================
 
-// ======================
-// ADD FRIEND
-// ======================
+app.get('/api/friend-requests', auth, async (req, res) => {
 
-app.post('/api/add-friend', (req, res) => {
-
-  const { user_id, friend_username } = req.body;
-
-  db.query(
-    'SELECT id FROM users WHERE username = ?',
-    [friend_username],
-    (err, result) => {
-
-      if (err || result.length === 0) {
-
-        return res.status(404).json({
-          success: false,
-          message: 'User not found'
-        });
-
-      }
-
-      const friend_id = result[0].id;
-
-      db.query(
-        'INSERT INTO friends (user_id, friend_id) VALUES (?, ?)',
-        [user_id, friend_id],
-        (err2) => {
-
-          if (err2) {
-
-            return res.status(500).json({
-              success: false
-            });
-
-          }
-
-          res.json({
-            success: true
-          });
-
-        }
-      );
-
-    }
+  const [rows] = await db.query(
+    `
+    SELECT friend_requests.id, users.username
+    FROM friend_requests
+    JOIN users
+    ON friend_requests.sender_id = users.id
+    WHERE friend_requests.receiver_id = ?
+    `,
+    [req.user.id]
   );
 
+  res.json(rows);
 });
 
+// ================= ACCEPT REQUEST =================
 
-// ======================
-// GET FRIENDS
-// ======================
+app.post('/api/accept-request', auth, async (req, res) => {
 
-app.get('/api/friends/:id', (req, res) => {
+  try {
 
-  const userId = req.params.id;
+    const { requestId } = req.body;
 
-  db.query(
+    const [rows] = await db.query(
+      'SELECT * FROM friend_requests WHERE id = ?',
+      [requestId]
+    );
+
+    if (rows.length === 0) {
+      return res.json({
+        success: false
+      });
+    }
+
+    const request = rows[0];
+
+    await db.query(
+      'INSERT INTO friends (user_id, friend_id) VALUES (?, ?)',
+      [request.sender_id, request.receiver_id]
+    );
+
+    await db.query(
+      'INSERT INTO friends (user_id, friend_id) VALUES (?, ?)',
+      [request.receiver_id, request.sender_id]
+    );
+
+    await db.query(
+      'DELETE FROM friend_requests WHERE id = ?',
+      [requestId]
+    );
+
+    io.emit('friends_updated');
+
+    res.json({
+      success: true
+    });
+
+  } catch {
+
+    res.json({
+      success: false
+    });
+
+  }
+});
+
+// ================= FRIENDS =================
+
+app.get('/api/friends', auth, async (req, res) => {
+
+  const [rows] = await db.query(
     `
     SELECT users.id, users.username, users.is_online
     FROM friends
@@ -229,74 +343,19 @@ app.get('/api/friends/:id', (req, res) => {
     ON friends.friend_id = users.id
     WHERE friends.user_id = ?
     `,
-    [userId],
-    (err, result) => {
-
-      if (err) {
-
-        return res.status(500).json({
-          success: false
-        });
-
-      }
-
-      res.json(result);
-
-    }
+    [req.user.id]
   );
 
+  res.json(rows);
 });
 
+// ================= GET MESSAGES =================
 
-// ======================
-// SEND MESSAGE
-// ======================
+app.get('/api/messages/:friendId', auth, async (req, res) => {
 
-app.post('/api/send-message', (req, res) => {
+  const friendId = req.params.friendId;
 
-  const {
-    sender_id,
-    receiver_id,
-    message
-  } = req.body;
-
-  db.query(
-    `
-    INSERT INTO messages
-    (sender_id, receiver_id, message)
-    VALUES (?, ?, ?)
-    `,
-    [sender_id, receiver_id, message],
-    (err) => {
-
-      if (err) {
-
-        return res.status(500).json({
-          success: false
-        });
-
-      }
-
-      res.json({
-        success: true
-      });
-
-    }
-  );
-
-});
-
-
-// ======================
-// GET MESSAGES
-// ======================
-
-app.get('/api/messages/:user1/:user2', (req, res) => {
-
-  const user1 = req.params.user1;
-  const user2 = req.params.user2;
-
-  db.query(
+  const [rows] = await db.query(
     `
     SELECT *
     FROM messages
@@ -306,55 +365,89 @@ app.get('/api/messages/:user1/:user2', (req, res) => {
     (sender_id = ? AND receiver_id = ?)
     ORDER BY created_at ASC
     `,
-    [user1, user2, user2, user1],
-    (err, result) => {
-
-      if (err) {
-
-        return res.status(500).json({
-          success: false
-        });
-
-      }
-
-      res.json(result);
-
-    }
+    [
+      req.user.id,
+      friendId,
+      friendId,
+      req.user.id
+    ]
   );
 
+  res.json(rows);
 });
 
+// ================= FILE UPLOAD =================
 
-// ======================
-// LOGOUT
-// ======================
+app.post('/api/upload', auth, upload.single('file'), async (req, res) => {
 
-app.post('/api/logout', (req, res) => {
-
-  const { user_id } = req.body;
-
-  db.query(
-    'UPDATE users SET is_online = 0 WHERE id = ?',
-    [user_id],
-    () => {
-
-      res.json({
-        success: true
-      });
-
-    }
-  );
-
+  res.json({
+    path: `/uploads/${req.file.filename}`
+  });
 });
 
+// ================= SOCKET =================
 
-// ======================
-// START SERVER
-// ======================
+io.use((socket, next) => {
+
+  try {
+
+    const token = socket.handshake.auth.token;
+
+    const decoded = jwt.verify(token, SECRET);
+
+    socket.user = decoded;
+
+    next();
+
+  } catch {
+
+    next(new Error('Unauthorized'));
+
+  }
+});
+
+io.on('connection', (socket) => {
+
+  socket.on('send_message', async (data) => {
+
+    const sender_id = socket.user.id;
+
+    const { receiver_id, message } = data;
+
+    const [result] = await db.query(
+      `
+      INSERT INTO messages
+      (sender_id, receiver_id, message)
+      VALUES (?, ?, ?)
+      `,
+      [sender_id, receiver_id, message]
+    );
+
+    const msg = {
+      id: result.insertId,
+      sender_id,
+      receiver_id,
+      message
+    };
+
+    io.emit('receive_message', msg);
+  });
+
+  socket.on('disconnect', async () => {
+
+    await db.query(
+      'UPDATE users SET is_online = 0 WHERE id = ?',
+      [socket.user.id]
+    );
+
+    io.emit('status_update');
+  });
+});
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
 });
+
 
