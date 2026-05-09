@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Cairo',sans-serif;
+}
+
+body{
+  background:#050b08;
+  color:white;
+  overflow:hidden;
+}
+
+/* LOGIN */
+
+.login-page{
+  width:100%;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+  radial-gradient(circle at top left,#10331f,#050b08 40%);
+}
+
+.login-box{
+  width:420px;
+  padding:45px;
+  border-radius:30px;
+  background:rgba(10,15,12,.85);
+  border:1px solid #1d5a38;
+  box-shadow:
+  0 0 40px rgba(0,255,120,.08);
+  backdrop-filter:blur(10px);
+}
+
+.logo{
+  text-align:center;
+  margin-bottom:40px;
+}
+
+.logo h1{
+  color:#57d67b;
+  font-size:46px;
+  font-weight:700;
+  letter-spacing:2px;
+}
+
+.logo p{
+  color:#8da598;
+  margin-top:10px;
+}
+
+.input-group{
+  margin-bottom:22px;
+}
+
+.input-group input{
+  width:100%;
+  padding:16px;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  background:#0f1713;
+  color:white;
+  border:1px solid #1d3326;
+  font-size:15px;
+}
+
+.input-group input:focus{
+  border-color:#57d67b;
+}
+
+.login-btn{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:16px;
+  background:#57d67b;
+  color:#07110b;
+  font-size:18px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.login-btn:hover{
+  transform:translateY(-2px);
+  background:#69f090;
+}
+
+/* DASHBOARD */
+
+.dashboard{
+  display:flex;
+  height:100vh;
+}
+
+.sidebar{
+  width:320px;
+  background:#08110d;
+  border-right:1px solid #163120;
+  display:flex;
+  flex-direction:column;
+}
+
+.brand{
+  padding:25px;
+  border-bottom:1px solid #163120;
+}
+
+.brand h2{
+  color:#57d67b;
+  font-size:30px;
+}
+
+.search-box{
+  padding:18px;
+}
+
+.search-box input{
+  width:100%;
+  padding:14px;
+  border:none;
+  outline:none;
+  border-radius:14px;
+  background:#0f1713;
+  color:white;
+}
+
+.friend-list{
+  flex:1;
+  overflow-y:auto;
+}
+
+.friend{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:18px;
+  cursor:pointer;
+  transition:.25s;
+  border-bottom:1px solid #101d16;
+}
+
+.friend:hover{
+  background:#102117;
+}
+
+.friend.active{
+  background:#14301f;
+}
+
+.avatar{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  background:#57d67b;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-weight:700;
+  color:#08110d;
+}
+
+.friend-info h4{
+  font-size:17px;
+}
+
+.friend-info span{
+  color:#7da28a;
+  font-size:13px;
+}
+
+.chat-area{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  background:#050b08;
+}
+
+.chat-header{
+  padding:20px 30px;
+  border-bottom:1px solid #163120;
+  display:flex;
+  align-items:center;
+  gap:15px;
+}
+
+.chat-messages{
+  flex:1;
+  padding:30px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.message{
+  max-width:420px;
+  padding:14px 18px;
+  border-radius:18px;
+  line-height:1.5;
+  position:relative;
+}
+
+.message.sent{
+  align-self:flex-end;
+  background:#1c7b43;
+}
+
+.message.received{
+  align-self:flex-start;
+  background:#111917;
+}
+
+.chat-input{
+  padding:22px;
+  border-top:1px solid #163120;
+  display:flex;
+  gap:15px;
+}
+
+.chat-input input{
+  flex:1;
+  padding:16px;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  background:#0f1713;
+  color:white;
+}
+
+.chat-input button{
+  width:60px;
+  border:none;
+  border-radius:16px;
+  background:#57d67b;
+  color:#08110d;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.requests{
+  padding:15px;
+  border-top:1px solid #163120;
+  background:#08110d;
+}
+
+.requests h3{
+  margin-bottom:12px;
+  color:#57d67b;
+}
+
+.request-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  background:#0f1713;
+  padding:12px;
+  border-radius:12px;
+}
+
+.request-item button{
+  background:#57d67b;
+  border:none;
+  padding:8px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
