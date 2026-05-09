@@ -32,18 +32,30 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-const db = mysql.createConnection({
+const mysql = require('mysql2');
+
+const db = mysql.createPool({
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
   connectTimeout: 10000,
-    ssl: {
+  ssl: {
     rejectUnauthorized: false
   }
-
 });
-
+db.getConnection((err, connection) => {
+  if (err) {
+    console.error('Database connection failed:', err);
+  } else {
+    console.log('Connected to Aiven MySQL');
+    connection.release();
+  }
+});
 
 const onlineUsers = {};
 const storage = multer.diskStorage({
