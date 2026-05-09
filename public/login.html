@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
@@ -60,12 +61,28 @@
       دخول
     </button>
 
+    <button
+      class="register-btn"
+      onclick="register()"
+      style="
+        margin-top:10px;
+        width:100%;
+        padding:15px;
+        border:none;
+        border-radius:12px;
+        cursor:pointer;
+      "
+    >
+      إنشاء حساب
+    </button>
+
   </div>
 
   <script>
 
-    const API =
-      '/api';
+    const API = '/api';
+
+    // ===== LOGIN =====
 
     async function login() {
 
@@ -127,7 +144,59 @@
 
     }
 
+    // ===== REGISTER =====
+
+    async function register() {
+
+      const username =
+        document.getElementById(
+          'username'
+        ).value;
+
+      const password =
+        document.getElementById(
+          'password'
+        ).value;
+
+      const res = await fetch(
+        `${API}/register`,
+        {
+
+          method: 'POST',
+
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
+
+          body: JSON.stringify({
+            username,
+            password
+          })
+
+        }
+      );
+
+      const data =
+        await res.json();
+
+      if (data.success) {
+
+        alert('تم إنشاء الحساب');
+
+      } else {
+
+        alert(
+          data.error ||
+          'Register failed'
+        );
+
+      }
+
+    }
+
   </script>
 
 </body>
 </html>
+
