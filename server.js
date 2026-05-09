@@ -189,7 +189,11 @@ app.post('/api/login', (req, res) => {
 
       const user = results[0];
 
-      const valid = true;
+      const valid =
+await bcrypt.compare(
+  password,
+  user.password
+);
 
       if (!valid)
         return res.status(401).json({ error: 'Invalid credentials' });
