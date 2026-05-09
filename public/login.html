@@ -1,76 +1,45 @@
-```html
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 
 <head>
-
-  <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Falcons Office</title>
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  />
-
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="login-page">
 
   <div class="login-box">
 
-    <div class="logo">
+    <h1>Falcons</h1>
+    <p>Private Secure Messaging</p>
 
-      <h1>Falcons</h1>
-
-      <p>
-        Private Secure Messaging
-      </p>
-
-    </div>
-
-    <div class="input-group">
-
-      <input
-        type="text"
-        id="username"
-        placeholder="اسم المستخدم"
-      />
-
-    </div>
-
-    <div class="input-group">
-
-      <input
-        type="password"
-        id="password"
-        placeholder="كلمة المرور"
-      />
-
-    </div>
-
-    <button
-      class="login-btn"
-      onclick="login()"
+    <input
+      type="text"
+      id="username"
+      placeholder="اسم المستخدم"
     >
+
+    <input
+      type="password"
+      id="password"
+      placeholder="كلمة المرور"
+    >
+
+    <button onclick="login()">
       دخول
     </button>
 
     <button
-      class="register-btn"
       onclick="register()"
       style="
-        margin-top:10px;
-        width:100%;
-        padding:15px;
-        border:none;
-        border-radius:12px;
-        cursor:pointer;
+      margin-top:10px;
+      background:#111;
+      color:white;
+      border:1px solid #00ff99;
       "
     >
       إنشاء حساب
@@ -82,29 +51,27 @@
 
     const API = '/api';
 
-    // ===== LOGIN =====
-
     async function login() {
 
       const username =
-        document.getElementById(
-          'username'
-        ).value;
+        document.getElementById('username').value;
 
       const password =
-        document.getElementById(
-          'password'
-        ).value;
+        document.getElementById('password').value;
 
-      const res = await fetch(
-        `${API}/login`,
-        {
+      if (!username || !password) {
+        alert('املأ جميع الحقول');
+        return;
+      }
+
+      try {
+
+        const res = await fetch(`${API}/login`, {
 
           method: 'POST',
 
           headers: {
-            'Content-Type':
-              'application/json'
+            'Content-Type': 'application/json'
           },
 
           body: JSON.stringify({
@@ -112,61 +79,69 @@
             password
           })
 
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+
+          localStorage.setItem(
+            'userId',
+            data.id
+          );
+
+          localStorage.setItem(
+            'username',
+            data.username
+          );
+
+          window.location.href =
+            'dashboard.html';
+
+        } else {
+
+          alert(
+            data.message ||
+            'فشل تسجيل الدخول'
+          );
+
         }
-      );
 
-      const data =
-        await res.json();
+      } catch (error) {
 
-      if (data.token) {
+        console.log(error);
 
-        localStorage.setItem(
-          'token',
-          data.token
-        );
-
-        localStorage.setItem(
-          'username',
-          username
-        );
-
-        window.location =
-          'dashboard.html';
-
-      } else {
-
-        alert(
-          data.error ||
-          'Login failed'
-        );
+        alert('Server Error');
 
       }
 
     }
 
-    // ===== REGISTER =====
+
 
     async function register() {
 
       const username =
-        document.getElementById(
-          'username'
-        ).value;
+        document.getElementById('username').value;
 
       const password =
-        document.getElementById(
-          'password'
-        ).value;
+        document.getElementById('password').value;
 
-      const res = await fetch(
-        `${API}/register`,
-        {
+      if (!username || !password) {
+
+        alert('املأ جميع الحقول');
+        return;
+
+      }
+
+      try {
+
+        const res = await fetch(`${API}/register`, {
 
           method: 'POST',
 
           headers: {
-            'Content-Type':
-              'application/json'
+            'Content-Type': 'application/json'
           },
 
           body: JSON.stringify({
@@ -174,22 +149,28 @@
             password
           })
 
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+
+          alert('تم إنشاء الحساب');
+
+        } else {
+
+          alert(
+            data.message ||
+            'فشل إنشاء الحساب'
+          );
+
         }
-      );
 
-      const data =
-        await res.json();
+      } catch (error) {
 
-      if (data.success) {
+        console.log(error);
 
-        alert('تم إنشاء الحساب');
-
-      } else {
-
-        alert(
-          data.error ||
-          'Register failed'
-        );
+        alert('Server Error');
 
       }
 
@@ -198,5 +179,6 @@
   </script>
 
 </body>
+
 </html>
 
