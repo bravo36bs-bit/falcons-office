@@ -19,22 +19,11 @@
 <h2>Falcons Office</h2>
 </div>
 
-<div class="search-box">
-<input type="text" id="friendName" placeholder="إضافة صديق">
-</div>
 
-<div style="padding:0 18px 18px;">
-<button class="login-btn" onclick="addFriend()">
-إرسال طلب
-</button>
-</div>
 
-<div class="friend-list" id="friends"></div>
 
-<div class="requests">
-<h3>طلبات الصداقة</h3>
-<div id="requests"></div>
-</div>
+
+
 
 </div>
 
@@ -210,7 +199,7 @@ function sendMessage(){
 
   socket.emit('send_message',{
 
-    receiver_id:selectedFriend.id,
+    receiver_id:sender,
     message
 
   });

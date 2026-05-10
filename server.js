@@ -102,7 +102,19 @@ app.post('/api/register', async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+db.query(
+    'SELECT COUNT(*) as total FROM users',
+    (err, countResult) => {
 
+        if (countResult[0].total >= 4) {
+            return res.status(403).json({
+                error: 'Maximum users reached'
+            });
+        }
+
+        // هنا يجي كود إنشاء الحساب الأصلي
+    }
+);
     await db.query(
       'INSERT INTO users (username, password, is_online) VALUES (?, ?, 0)',
       [username, hashed]
@@ -186,148 +198,59 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// SEND FRIEND REQUEST
-app.post('/api/send-request', auth, async (req, res) => {
-  try {
-    const { friendName } = req.body;
+app.post('/api/send', (req, res) => {
+    const { sender, message } = req.body;
 
-    const [friendRows] = await db.query(
-      'SELECT id FROM users WHERE username = ?',
-      [friendName]
-    );
-
-    if (friendRows.length === 0) {
-      return res.json({
-        success: false,
-        error: 'User not found'
-      });
+    if (!sender || !message) {
+        return res.status(400).json({
+            error: 'Missing data'
+        });
     }
 
-    const friendId = friendRows[0].id;
+    db.query(
+        'INSERT INTO messages (sender, message) VALUES (?, ?)',
+        [sender, message],
+        (err) => {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({
+                    error: 'Database error'
+                });
+            }
 
-    await db.query(
-      'INSERT INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)',
-      [req.user.id, friendId]
+            res.json({
+                success: true
+            });
+        }
     );
-
-    io.emit('friend_request', {
-      from: req.user.username
-    });
-
-    res.json({
-      success: true
-    });
-
-  } catch (err) {
-    console.log(err);
-    res.json({
-      success: false,
-      error: 'Request failed'
-    });
-  }
 });
 
-// GET FRIEND REQUESTS
-app.get('/api/friend-requests', auth, async (req, res) => {
-  const [rows] = await db.query(
-    `
-    SELECT friend_requests.id, users.username
-    FROM friend_requests
-    JOIN users
-    ON friend_requests.sender_id = users.id
-    WHERE friend_requests.receiver_id = ?
-    `,
-    [req.user.id]
-  );
 
-  res.json(rows);
-});
 
-// ACCEPT REQUEST
-app.post('/api/accept-request', auth, async (req, res) => {
-  try {
-    const { requestId } = req.body;
 
-    const [rows] = await db.query(
-      'SELECT * FROM friend_requests WHERE id = ?',
-      [requestId]
-    );
 
-    if (rows.length === 0) {
-      return res.json({
-        success: false
-      });
-    }
 
-    const request = rows[0];
 
-    await db.query(
-      'INSERT INTO friends (user_id, friend_id) VALUES (?, ?)',
-      [request.sender_id, request.receiver_id]
-    );
 
-    await db.query(
-      'INSERT INTO friends (user_id, friend_id) VALUES (?, ?)',
-      [request.receiver_id, request.sender_id]
-    );
-
-    await db.query(
-      'DELETE FROM friend_requests WHERE id = ?',
-      [requestId]
-    );
-
-    io.emit('friends_updated');
-
-    res.json({
-      success: true
-    });
-
-  } catch {
-    res.json({
-      success: false
-    });
-  }
-});
-
-// GET FRIENDS
-app.get('/api/friends', auth, async (req, res) => {
-  const [rows] = await db.query(
-    `
-    SELECT users.id, users.username, users.is_online
-    FROM friends
-    JOIN users
-    ON friends.friend_id = users.id
-    WHERE friends.user_id = ?
-    `,
-    [req.user.id]
-  );
-
-  res.json(rows);
-});
 
 // GET MESSAGES
-app.get('/api/messages/:friendId', auth, async (req, res) => {
-  const friendId = req.params.friendId;
+app.get('/api/messages', (req, res) => {
 
-  const [rows] = await db.query(
-    `
-    SELECT *
-    FROM messages
-    WHERE
-    (sender_id = ? AND receiver_id = ?)
-    OR
-    (sender_id = ? AND receiver_id = ?)
-    ORDER BY created_at ASC
-    `,
-    [
-      req.user.id,
-      friendId,
-      friendId,
-      req.user.id
-    ]
-  );
+    db.query(
+        'SELECT * FROM messages ORDER BY created_at ASC',
+        (err, result) => {
 
-  res.json(rows);
+            if (err) {
+                console.log(err);
+
+                return res.status(500).json({
+                    error: 'Database error'
+                });
+            }
+
+            res.json(result);
+        }
+    );
 });
 
 // FILE UPLOAD
