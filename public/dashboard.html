@@ -97,55 +97,7 @@ async function api(endpoint, options={}){
 
 }
 
-async function loadFriends(){
 
-  const friends = await api('/api/friends');
-
-  const container =
-  document.getElementById('friends');
-
-  container.innerHTML='';
-
-  friends.forEach(friend=>{
-
-    const div =
-    document.createElement('div');
-
-    div.className='friend';
-
-    div.innerHTML=`
-    <div class="avatar">
-    ${friend.username[0]}
-    </div>
-
-    <div class="friend-info">
-      <h4>${friend.username}</h4>
-      <span>
-      ${friend.is_online ? 'Online':'Offline'}
-      </span>
-    </div>
-    `;
-
-    div.onclick=()=>{
-
-      selectedFriend = friend;
-
-      document.getElementById('chatHeader').innerHTML=`
-      <div class="avatar">
-      ${friend.username[0]}
-      </div>
-      <div>${friend.username}</div>
-      `;
-
-      loadMessages(friend.id);
-
-    };
-
-    container.appendChild(div);
-
-  });
-
-}
 
 async function loadMessages(friendId){
 
@@ -208,80 +160,11 @@ function sendMessage(){
 
 }
 
-async function addFriend(){
 
-  const friendName =
-  document.getElementById('friendName').value;
 
-  const data =
-  await api('/api/send-request',{
 
-    method:'POST',
 
-    body:JSON.stringify({
-      friendName
-    })
 
-  });
-
-  if(data.success){
-    alert('تم إرسال طلب الصداقة');
-  }else{
-    alert(data.error);
-  }
-
-}
-
-async function loadRequests(){
-
-  const requests =
-  await api('/api/friend-requests');
-
-  const container =
-  document.getElementById('requests');
-
-  container.innerHTML='';
-
-  requests.forEach(req=>{
-
-    const div =
-    document.createElement('div');
-
-    div.className='request-item';
-
-    div.innerHTML=`
-    <span>${req.username}</span>
-
-    <button onclick="acceptRequest(${req.id})">
-    قبول
-    </button>
-    `;
-
-    container.appendChild(div);
-
-  });
-
-}
-
-async function acceptRequest(id){
-
-  const data =
-  await api('/api/accept-request',{
-
-    method:'POST',
-
-    body:JSON.stringify({
-      requestId:id
-    })
-
-  });
-
-  if(data.success){
-    loadFriends();
-    loadRequests();
-  }
-
-}
 
 socket.on('receive_message', data=>{
 
