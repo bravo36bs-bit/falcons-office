@@ -1,171 +1,118 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
 <title>Falcons Office</title>
-
 <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body class="login-page">
 
 <div class="login-box">
 
-    <h1 class="logo">Falcons</h1>
-    <p class="subtitle">Private Secure Messaging</p>
+<div class="logo-area">
+<h1>Falcons</h1>
+<p>Private Secure Messaging</p>
+</div>
 
-    <input
-        type="text"
-        id="username"
-        placeholder="Username"
-    >
+<div class="input-group">
+<input type="text" id="username" placeholder="اسم المستخدم">
+</div>
 
-    <input
-        type="password"
-        id="password"
-        placeholder="Password"
-    >
+<div class="input-group">
+<input type="password" id="password" placeholder="كلمة المرور">
+</div>
 
-    <button id="mainBtn" onclick="submitForm()">
-        Login
-    </button>
+<button id="mainBtn" class="login-btn" onclick="submitForm()">
+تسجيل الدخول
+</button>
 
-    <p class="switch-mode">
-        <span id="switchText">
-            Don't have an account?
-        </span>
-
-        <a href="#" onclick="toggleMode()"
-           id="switchBtn">
-           Create Account
-        </a>
-    </p>
+<p class="switch-mode">
+<span id="switchText">ليس لديك حساب؟</span>
+<a href="#" onclick="toggleMode()" id="switchBtn">
+إنشاء حساب
+</a>
+</p>
 
 </div>
 
 <script>
 
-const API = '';
-
 let isLogin = true;
 
-function toggleMode() {
+function toggleMode(){
 
-    isLogin = !isLogin;
+  isLogin = !isLogin;
 
-    const btn = document.getElementById('mainBtn');
-    const switchText = document.getElementById('switchText');
-    const switchBtn = document.getElementById('switchBtn');
+  document.getElementById('mainBtn').innerText =
+  isLogin ? 'تسجيل الدخول' : 'إنشاء حساب';
 
-    if (isLogin) {
+  document.getElementById('switchText').innerText =
+  isLogin ? 'ليس لديك حساب؟' : 'لديك حساب بالفعل؟';
 
-        btn.innerText = 'Login';
+  document.getElementById('switchBtn').innerText =
+  isLogin ? 'إنشاء حساب' : 'تسجيل الدخول';
 
-        switchText.innerText =
-            "Don't have an account?";
-
-        switchBtn.innerText =
-            'Create Account';
-
-    } else {
-
-        btn.innerText = 'Create Account';
-
-        switchText.innerText =
-            'Already have an account?';
-
-        switchBtn.innerText =
-            'Login';
-
-    }
 }
 
-async function submitForm() {
+async function submitForm(){
 
-    const username =
-        document.getElementById('username').value;
+  const username =
+  document.getElementById('username').value;
 
-    const password =
-        document.getElementById('password').value;
+  const password =
+  document.getElementById('password').value;
 
-    if (!username || !password) {
+  if(!username || !password){
+    alert('املأ جميع الحقول');
+    return;
+  }
 
-        alert('Fill all fields');
+  const endpoint =
+  isLogin
+  ? '/api/login'
+  : '/api/register';
 
-        return;
-    }
+  const res = await fetch(endpoint,{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json'
+    },
+    body:JSON.stringify({
+      username,
+      password
+    })
+  });
 
-    try {
+  const data = await res.json();
 
-        const endpoint =
-            isLogin
-            ? '/api/login'
-            : '/api/register';
+  if(!data.success){
+    alert(data.message || data.error);
+    return;
+  }
 
-        const res = await fetch(endpoint, {
+  if(!isLogin){
+    alert('تم إنشاء الحساب');
+    toggleMode();
+    return;
+  }
 
-            method: 'POST',
+  localStorage.setItem(
+    'token',
+    data.token
+  );
 
-            headers: {
-                'Content-Type': 'application/json'
-            },
+  localStorage.setItem(
+    'user',
+    JSON.stringify(data.user)
+  );
 
-            body: JSON.stringify({
-                username,
-                password
-            })
-        });
+  window.location.href='/dashboard.html';
 
-        const data = await res.json();
-
-        if (!data.success) {
-
-            alert(
-                data.message ||
-                data.error ||
-                'Request failed'
-            );
-
-            return;
-        }
-
-        if (!isLogin) {
-
-            alert('Account created successfully');
-
-            toggleMode();
-
-            return;
-        }
-
-        localStorage.setItem(
-            'token',
-            data.token
-        );
-
-        localStorage.setItem(
-            'user',
-            JSON.stringify(data.user)
-        );
-
-        window.location.href =
-            '/dashboard.html';
-
-    } catch (err) {
-
-        console.log(err);
-
-        alert('Server error');
-
-    }
 }
 
 </script>
 
 </body>
 </html>
-

@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 
 const express = require('express');
@@ -16,9 +15,7 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-  cors: {
-    origin: '*'
-  }
+  cors: { origin: '*' }
 });
 
 app.use(cors());
@@ -30,7 +27,7 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
-const SECRET = process.env.JWT_SECRET;
+const SECRET = process.env.JWT_SECRET || 'falcons_secret';
 
 const db = mysql.createPool({
   host: process.env.DB_HOST,
@@ -43,40 +40,25 @@ const db = mysql.createPool({
 });
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+  destination: (req, file, cb) => cb(null, 'uploads/'),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
 
 const upload = multer({ storage });
 
 function auth(req, res, next) {
-
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({
-      error: 'Unauthorized'
-    });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
-
     const decoded = jwt.verify(token, SECRET);
-
     req.user = decoded;
-
     next();
-
   } catch {
-
-    return res.status(401).json({
-      error: 'Invalid token'
-    });
-
+    return res.status(401).json({ error: 'Invalid token' });
   }
 }
 
@@ -84,16 +66,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-// ================= REGISTER =================
-
+// REGISTER
 app.post('/api/register', async (req, res) => {
-
   try {
-
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({
+      return res.json({
         success: false,
         message: 'Missing fields'
       });
@@ -104,7 +83,7 @@ app.post('/api/register', async (req, res) => {
     );
 
     if (countRows[0].total >= 4) {
-      return res.status(403).json({
+      return res.json({
         success: false,
         message: 'Registration closed'
       });
@@ -116,7 +95,7 @@ app.post('/api/register', async (req, res) => {
     );
 
     if (existing.length > 0) {
-      return res.status(400).json({
+      return res.json({
         success: false,
         message: 'Username already exists'
       });
@@ -134,21 +113,16 @@ app.post('/api/register', async (req, res) => {
     });
 
   } catch (err) {
-
     console.log(err);
-
     res.status(500).json({
       success: false
     });
   }
 });
 
-// ================= LOGIN =================
-
+// LOGIN
 app.post('/api/login', async (req, res) => {
-
   try {
-
     const { username, password } = req.body;
 
     const [rows] = await db.query(
@@ -157,7 +131,7 @@ app.post('/api/login', async (req, res) => {
     );
 
     if (rows.length === 0) {
-      return res.status(401).json({
+      return res.json({
         success: false,
         message: 'Invalid credentials'
       });
@@ -171,7 +145,7 @@ app.post('/api/login', async (req, res) => {
     );
 
     if (!valid) {
-      return res.status(401).json({
+      return res.json({
         success: false,
         message: 'Invalid credentials'
       });
@@ -205,22 +179,16 @@ app.post('/api/login', async (req, res) => {
     });
 
   } catch (err) {
-
     console.log(err);
-
     res.status(500).json({
       success: false
     });
-
   }
 });
 
-// ================= FRIEND REQUEST =================
-
+// SEND FRIEND REQUEST
 app.post('/api/send-request', auth, async (req, res) => {
-
   try {
-
     const { friendName } = req.body;
 
     const [friendRows] = await db.query(
@@ -251,21 +219,16 @@ app.post('/api/send-request', auth, async (req, res) => {
     });
 
   } catch (err) {
-
     console.log(err);
-
     res.json({
       success: false,
       error: 'Request failed'
     });
-
   }
 });
 
-// ================= GET REQUESTS =================
-
+// GET FRIEND REQUESTS
 app.get('/api/friend-requests', auth, async (req, res) => {
-
   const [rows] = await db.query(
     `
     SELECT friend_requests.id, users.username
@@ -280,12 +243,9 @@ app.get('/api/friend-requests', auth, async (req, res) => {
   res.json(rows);
 });
 
-// ================= ACCEPT REQUEST =================
-
+// ACCEPT REQUEST
 app.post('/api/accept-request', auth, async (req, res) => {
-
   try {
-
     const { requestId } = req.body;
 
     const [rows] = await db.query(
@@ -323,18 +283,14 @@ app.post('/api/accept-request', auth, async (req, res) => {
     });
 
   } catch {
-
     res.json({
       success: false
     });
-
   }
 });
 
-// ================= FRIENDS =================
-
+// GET FRIENDS
 app.get('/api/friends', auth, async (req, res) => {
-
   const [rows] = await db.query(
     `
     SELECT users.id, users.username, users.is_online
@@ -349,10 +305,8 @@ app.get('/api/friends', auth, async (req, res) => {
   res.json(rows);
 });
 
-// ================= GET MESSAGES =================
-
+// GET MESSAGES
 app.get('/api/messages/:friendId', auth, async (req, res) => {
-
   const friendId = req.params.friendId;
 
   const [rows] = await db.query(
@@ -376,42 +330,31 @@ app.get('/api/messages/:friendId', auth, async (req, res) => {
   res.json(rows);
 });
 
-// ================= FILE UPLOAD =================
-
+// FILE UPLOAD
 app.post('/api/upload', auth, upload.single('file'), async (req, res) => {
-
   res.json({
     path: `/uploads/${req.file.filename}`
   });
 });
 
-// ================= SOCKET =================
-
+// SOCKET AUTH
 io.use((socket, next) => {
-
   try {
-
     const token = socket.handshake.auth.token;
-
     const decoded = jwt.verify(token, SECRET);
-
     socket.user = decoded;
-
     next();
-
   } catch {
-
     next(new Error('Unauthorized'));
-
   }
 });
 
+// SOCKET EVENTS
 io.on('connection', (socket) => {
 
   socket.on('send_message', async (data) => {
 
     const sender_id = socket.user.id;
-
     const { receiver_id, message } = data;
 
     const [result] = await db.query(
@@ -434,7 +377,6 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', async () => {
-
     await db.query(
       'UPDATE users SET is_online = 0 WHERE id = ?',
       [socket.user.id]
@@ -442,6 +384,7 @@ io.on('connection', (socket) => {
 
     io.emit('status_update');
   });
+
 });
 
 const PORT = process.env.PORT || 5000;
@@ -449,5 +392,3 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on ${PORT}`);
 });
-
-
