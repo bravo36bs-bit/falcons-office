@@ -137,6 +137,7 @@ function renderMessage(msg){
 
 }
 
+
 function sendMessage(){
 
   const input =
@@ -145,13 +146,12 @@ function sendMessage(){
   const message =
   input.value.trim();
 
-  if(!message || !selectedFriend){
+  if(!message){
     return;
   }
 
   socket.emit('send_message',{
 
-    receiver_id:sender,
     message
 
   });
@@ -159,8 +159,6 @@ function sendMessage(){
   input.value='';
 
 }
-
-
 
 
 
