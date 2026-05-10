@@ -323,48 +323,7 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
-// جلب الاصدقاء
-app.get('/api/friends/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
 
-    const [friends] = await db.promise().query(`
-      SELECT users.id, users.username
-      FROM friends
-      JOIN users ON friends.friend_id = users.id
-      WHERE friends.user_id = ?
-    `, [userId]);
-
-    res.json(friends);
-
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// جلب طلبات الصداقة
-app.get('/api/friend-requests/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-
-    const [requests] = await db.promise().query(`
-      SELECT friend_requests.id,
-             users.username,
-             users.id AS sender_id
-      FROM friend_requests
-      JOIN users
-      ON friend_requests.sender_id = users.id
-      WHERE friend_requests.receiver_id = ?
-    `, [userId]);
-
-    res.json(requests);
-
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
