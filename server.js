@@ -278,7 +278,7 @@ io.on('connection', (socket) => {
 socket.on('send_message', async(data)=>{
 
   const messageData = {
-    sender_id: socket.user.id,
+    
     username: socket.user.username,
     message: data.message,
     created_at: new Date()
@@ -289,8 +289,8 @@ socket.on('send_message', async(data)=>{
 });
     const msg = {
       
-      sender_id,
-      receiver_id,
+      
+      
       message
     };
 
