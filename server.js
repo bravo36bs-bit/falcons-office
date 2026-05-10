@@ -275,36 +275,32 @@ io.use((socket, next) => {
 // SOCKET EVENTS
 io.on('connection', (socket) => {
 
-socket.on('send_message', async(data)=>{
+  socket.on('send_message', async (data) => {
 
-  const messageData = {
-    
-    username: socket.user.username,
-    message: data.message,
-    created_at: new Date()
-  };
-
-  io.emit('receive_message', messageData);
-
-});
     const msg = {
-      
-      
-      
-      message
+
+      username: socket.user.username,
+      message: data.message,
+      created_at: new Date()
+
     };
 
     io.emit('receive_message', msg);
 
+  });
 
   socket.on('disconnect', async () => {
+
     await db.query(
       'UPDATE users SET is_online = 0 WHERE id = ?',
       [socket.user.id]
     );
 
     io.emit('status_update');
+
   });
+
+});
 
 
 // جلب كل المستخدمين
@@ -320,7 +316,7 @@ app.get('/api/users', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-});
+
 
 const PORT = process.env.PORT || 5000;
 
