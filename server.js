@@ -288,7 +288,7 @@ socket.on('send_message', async(data)=>{
 
 });
     const msg = {
-      id: result.insertId,
+      
       sender_id,
       receiver_id,
       message
