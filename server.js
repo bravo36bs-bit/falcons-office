@@ -295,7 +295,7 @@ socket.on('send_message', async(data)=>{
     };
 
     io.emit('receive_message', msg);
-  });
+
 
   socket.on('disconnect', async () => {
     await db.query(
@@ -320,7 +320,7 @@ app.get('/api/users', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
-
+});
 
 const PORT = process.env.PORT || 5000;
 
