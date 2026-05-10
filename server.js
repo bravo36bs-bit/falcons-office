@@ -275,20 +275,18 @@ io.use((socket, next) => {
 // SOCKET EVENTS
 io.on('connection', (socket) => {
 
-  socket.on('send_message', async (data) => {
+socket.on('send_message', async(data)=>{
 
-    const sender_id = socket.user.id;
-    const { receiver_id, message } = data;
+  const messageData = {
+    sender_id: socket.user.id,
+    username: socket.user.username,
+    message: data.message,
+    created_at: new Date()
+  };
 
-    const [result] = await db.query(
-      `
-      INSERT INTO messages
-      (sender_id, receiver_id, message)
-      VALUES (?, ?, ?)
-      `,
-      [sender_id, receiver_id, message]
-    );
+  io.emit('receive_message', messageData);
 
+});
     const msg = {
       id: result.insertId,
       sender_id,
@@ -308,7 +306,7 @@ io.on('connection', (socket) => {
     io.emit('status_update');
   });
 
-});
+
 // جلب كل المستخدمين
 app.get('/api/users', async (req, res) => {
   try {

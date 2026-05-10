@@ -166,15 +166,9 @@ function sendMessage(){
 
 socket.on('receive_message', data=>{
 
-  if(
-    selectedFriend &&
-    (
-      data.sender_id == selectedFriend.id ||
-      data.receiver_id == selectedFriend.id
-    )
-  ){
+  
     renderMessage(data);
-  }
+  
 
 });
 
