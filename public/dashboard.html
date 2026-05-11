@@ -177,39 +177,43 @@ function renderMessage(data){
   const div =
   document.createElement('div');
 
-  div.className = 'message';
+  div.className =
+  data.sender === currentUser.username
+  ? 'message sent'
+  : 'message received';
 
- let content = '';
+  let content = '';
 
-if(data.file){
+  if(data.file){
 
-  content = `
-  
-    <img
-    src="${data.file}"
-    class="chat-image"
-    
-    >
+    content += `
+
+      <img
+      src="${data.file}"
+      class="chat-image"
+      />
+
+    `;
+
+  }
+
+  if(data.message){
+
+    content += `
+
+      <p>${data.message}</p>
+
+    `;
+
+  }
+
+  div.innerHTML = `
+
+    <strong>${data.sender}</strong>
+
+    ${content}
 
   `;
-
-}else{
-
-  content = `
-  
-    <p>${data.message || ''}</p>
-    
-  `;
-
-}
-
-div.innerHTML = `
-
-  <strong>${data.sender}</strong>
-
-  ${content}
-
-`;
 
   messages.appendChild(div);
 

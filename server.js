@@ -265,7 +265,7 @@ io.on('connection', (socket) => {
 
     await db.query(
       'INSERT INTO messages (sender, message, file) VALUES (?, ?, ?)',
-  [socket.user.username, data.message]
+  [socket.user.username, data.message || null, data.file || null]
     );
 
    const msg = {
