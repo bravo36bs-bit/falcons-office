@@ -238,6 +238,7 @@ app.post('/api/send', (req, res) => {
 
 // FILE UPLOAD
 app.post('/api/upload', auth, upload.single('file'), async (req, res) => {
+  console.log(req.session);
   res.json({
     path: `/uploads/${req.file.filename}`
   });
