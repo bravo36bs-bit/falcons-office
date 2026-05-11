@@ -270,7 +270,8 @@ io.on('connection', (socket) => {
    const msg = {
 
   sender: socket.user.username,
-  message: data.message,
+  message:data.message || null,
+file:data.file || null,
   created_at: new Date()
 
 };

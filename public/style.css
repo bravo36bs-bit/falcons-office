@@ -329,3 +329,8 @@ img{
   }
 
 }
+.chat-image{
+  max-width:220px;
+  border-radius:14px;
+  margin-top:8px;
+}

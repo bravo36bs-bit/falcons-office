@@ -46,10 +46,11 @@ placeholder="اكتب رسالة..."
 <input
 type="file"
 id="fileInput"
-hidden
+style="display: none"
+onchange="uploadFile()"
 >
 
-<button onclick="document.getElementById('fileInput').click()">
+<button type="button"  onclick="document.getElementById('fileInput').click()">
 📎
 </button>
 
@@ -127,7 +128,11 @@ async function uploadFile(){
     const data =
     await res.json();
 
-    console.log(data);
+    socket.emit('send_message',{
+
+  file:data.fileUrl
+
+});
 
   }catch(err){
 
@@ -171,12 +176,37 @@ function renderMessage(data){
 
   div.className = 'message';
 
-  div.innerHTML = `
+ let content = '';
 
-    <strong>${data.sender}</strong>
-    <p>${data.message}</p>
+if(data.file){
+
+  content = `
+  
+    <img
+    src="${data.file}"
+    class="chat-image"
+    
+    >
 
   `;
+
+}else{
+
+  content = `
+  
+    <p>${data.message}</p>
+    
+  `;
+
+}
+
+div.innerHTML = `
+
+  <strong>${data.sender}</strong>
+
+  ${content}
+
+`;
 
   messages.appendChild(div);
 
