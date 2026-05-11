@@ -280,8 +280,8 @@ io.on('connection', (socket) => {
   try {
 
     await db.query(
-      'INSERT INTO messages (username, message) VALUES (?, ?)',
-      [socket.user.username, data.message]
+      'INSERT INTO messages (sender, message) VALUES (?, ?)',
+  [socket.user.username, data.message]
     );
 
     const msg = {
