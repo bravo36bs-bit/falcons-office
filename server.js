@@ -284,13 +284,13 @@ io.on('connection', (socket) => {
   [socket.user.username, data.message]
     );
 
-    const msg = {
+   const msg = {
 
-      username: socket.user.username,
-      message: data.message,
-      created_at: new Date()
+  sender: socket.user.username,
+  message: data.message,
+  created_at: new Date()
 
-    };
+};
 
     io.emit('receive_message', msg);
 
