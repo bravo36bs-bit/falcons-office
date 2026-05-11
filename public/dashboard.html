@@ -99,7 +99,7 @@ async function api(endpoint, options={}){
 }
 
 async function uploadFile(){
-
+console.log('UPLOAD STARTED');
   const fileInput =
   document.getElementById('fileInput');
 
@@ -124,7 +124,7 @@ async function uploadFile(){
       body:formData,
 credentials:'include'
     });
-
+console.log('REQUEST SENT');
     const data =
     await res.json();
 
