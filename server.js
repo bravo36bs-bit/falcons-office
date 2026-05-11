@@ -275,7 +275,14 @@ io.use((socket, next) => {
 // SOCKET EVENTS
 io.on('connection', (socket) => {
 
-  socket.on('send_message', async (data) => {
+ socket.on('send_message', async (data) => {
+
+  try {
+
+    await db.query(
+      'INSERT INTO messages (username, message) VALUES (?, ?)',
+      [socket.user.username, data.message]
+    );
 
     const msg = {
 
@@ -287,7 +294,13 @@ io.on('connection', (socket) => {
 
     io.emit('receive_message', msg);
 
-  });
+  } catch (err) {
+
+    console.log(err);
+
+  }
+
+});
 
   socket.on('disconnect', async () => {
 
@@ -317,6 +330,27 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+app.get('/api/messages', async (req, res) => {
+
+  try {
+
+    const [messages] = await db.query(
+      'SELECT * FROM messages ORDER BY created_at ASC'
+    );
+
+    res.json(messages);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      error: 'Database error'
+    });
+
+  }
+
+});
 
 const PORT = process.env.PORT || 5000;
 

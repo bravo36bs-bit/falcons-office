@@ -77,7 +77,7 @@ JSON.parse(localStorage.getItem('user'));
 const socket = io({
   auth:{token}
 });
-
+loadMessages();
 let selectedFriend = null;
 
 async function api(endpoint, options={}){
@@ -99,41 +99,51 @@ async function api(endpoint, options={}){
 
 
 
-async function loadMessages(friendId){
+async function loadMessages(){
 
-  const messages =
-  await api(`/api/messages/${friendId}`);
+  try{
 
-  const container =
-  document.getElementById('messages');
+    const res =
+    await fetch('/api/messages');
 
-  container.innerHTML='';
+    const messages =
+    await res.json();
 
-  messages.forEach(renderMessage);
+    messages.forEach(msg=>{
+
+      renderMessage(msg);
+
+    });
+
+  }catch(err){
+
+    console.log(err);
+
+  }
 
 }
 
-function renderMessage(msg){
+function renderMessage(data){
 
-  const container =
+  const messages =
   document.getElementById('messages');
 
   const div =
   document.createElement('div');
 
-  div.className =
-  `message ${
-    msg.sender_id == currentUser.id
-    ? 'sent'
-    : 'received'
-  }`;
+  div.className = 'message';
 
-  div.innerText = msg.message;
+  div.innerHTML = `
 
-  container.appendChild(div);
+    <strong>${data.username}</strong>
+    <p>${data.message}</p>
 
-  container.scrollTop =
-  container.scrollHeight;
+  `;
+
+  messages.appendChild(div);
+
+  messages.scrollTop =
+  messages.scrollHeight;
 
 }
 
@@ -151,9 +161,7 @@ function sendMessage(){
   }
 
   socket.emit('send_message',{
-
-message
-
+    message
   });
 
   input.value='';
