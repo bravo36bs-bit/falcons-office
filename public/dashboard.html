@@ -151,10 +151,7 @@ async function loadMessages(){
 
     const res =
     await fetch('/api/messages');
-      headers:{
-        Authorization:`Bearer ${token}`
-      }
-
+     
     const messages =
     await res.json();
 document.getElementById('messages').innerHTML='';
