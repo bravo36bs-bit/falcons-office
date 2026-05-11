@@ -113,7 +113,7 @@ async function uploadFile(){
   const formData =
   new FormData();
 
-  formData.append('file', file);
+  formData.append('file', fileInput.files[0]);
 
   try{
 
@@ -121,8 +121,8 @@ async function uploadFile(){
     await fetch('/upload',{
 
       method:'POST',
-      body:formData
-
+      body:formData,
+credentials:'include'
     });
 
     const data =
@@ -130,7 +130,7 @@ async function uploadFile(){
 
     socket.emit('send_message',{
 
-  file:data.fileUrl
+  file:data.path
 
 });
 
