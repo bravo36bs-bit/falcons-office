@@ -264,7 +264,7 @@ io.on('connection', (socket) => {
   try {
 
     await db.query(
-      'INSERT INTO messages (sender, message) VALUES (?, ?)',
+      'INSERT INTO messages (sender, message, file) VALUES (?, ?, ?)',
   [socket.user.username, data.message]
     );
 
@@ -320,7 +320,7 @@ app.get('/api/messages', async (req, res) => {
   try {
 
     const [messages] = await db.query(
-      'SELECT sender, message, created_at FROM messages ORDER BY created_at ASC'
+      'SELECT sender, message, file created_at FROM messages ORDER BY created_at ASC'
     );
 
     res.json(messages);
