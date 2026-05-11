@@ -320,7 +320,7 @@ app.get('/api/messages', async (req, res) => {
   try {
 
     const [messages] = await db.query(
-      'SELECT sender, message, file created_at FROM messages ORDER BY created_at ASC'
+      'SELECT sender, message, file, created_at FROM messages ORDER BY created_at ASC'
     );
 
     res.json(messages);
