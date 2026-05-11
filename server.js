@@ -234,24 +234,7 @@ app.post('/api/send', (req, res) => {
 
 
 // GET MESSAGES
-app.get('/api/messages', (req, res) => {
 
-    db.query(
-        'SELECT * FROM messages ORDER BY created_at ASC',
-        (err, result) => {
-
-            if (err) {
-                console.log(err);
-
-                return res.status(500).json({
-                    error: 'Database error'
-                });
-            }
-
-            res.json(result);
-        }
-    );
-});
 
 // FILE UPLOAD
 app.post('/api/upload', auth, upload.single('file'), async (req, res) => {
@@ -335,7 +318,7 @@ app.get('/api/messages', async (req, res) => {
   try {
 
     const [messages] = await db.query(
-      'SELECT * FROM messages ORDER BY created_at ASC'
+      'SELECT sender, message, created_at FROM messages ORDER BY created_at ASC'
     );
 
     res.json(messages);
@@ -345,7 +328,7 @@ app.get('/api/messages', async (req, res) => {
     console.log(err);
 
     res.status(500).json({
-      error: 'Database error'
+      error: 'server error'
     });
 
   }
