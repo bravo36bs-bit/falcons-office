@@ -97,15 +97,16 @@ app.post('/api/register', async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-db.query(
-    'SELECT COUNT(*) as total FROM users',
-    (err, countResult) => {
 
+const [result] =
+await db.query(
+ 'SELECT * FROM users'
+);
       
 
         // هنا يجي كود إنشاء الحساب الأصلي
-    }
-);
+    
+  
     await db.query(
       'INSERT INTO users (username, password, is_online) VALUES (?, ?, 0)',
       [username, hashed]
