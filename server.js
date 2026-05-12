@@ -82,12 +82,7 @@ app.post('/api/register', async (req, res) => {
       'SELECT COUNT(*) AS total FROM users'
     );
 
-    if (countRows[0].total >= 4) {
-      return res.json({
-        success: false,
-        message: 'Registration closed'
-      });
-    }
+    
 
     const [existing] = await db.query(
       'SELECT id FROM users WHERE username = ?',
@@ -106,11 +101,7 @@ db.query(
     'SELECT COUNT(*) as total FROM users',
     (err, countResult) => {
 
-        if (countResult[0].total >= 4) {
-            return res.status(403).json({
-                error: 'Maximum users reached'
-            });
-        }
+      
 
         // هنا يجي كود إنشاء الحساب الأصلي
     }
