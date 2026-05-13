@@ -150,7 +150,11 @@ async function loadMessages(){
   try{
 const token=localStorage.getItem('token');
     const res =
-    await fetch('/api/messages');
+    await fetch('/api/messages',{
+     headers:{
+      'Authoriation': `Bearer ${token}`
+     }
+    });
      
     const messages =
     await res.json();
