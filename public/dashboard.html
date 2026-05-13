@@ -148,7 +148,7 @@ console.log('REQUEST SENT');
 async function loadMessages(){
 
   try{
-
+const token=localStorage.getItem('token');
     const res =
     await fetch('/api/messages');
      
