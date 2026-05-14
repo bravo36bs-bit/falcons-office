@@ -88,10 +88,9 @@ let selectedFriend = null;
   });
   if (res.status ===401){
     
-   localStorage.removeItem('token');
-   window.location.href ='/login.html';
-  }
+   console.log('Unauthorized');
  }
+}
   checkAuth();
 async function api(endpoint, options={}){
 
