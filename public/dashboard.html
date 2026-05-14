@@ -80,7 +80,19 @@ const socket = io({
 });
 loadMessages();
 let selectedFriend = null;
-
+ async function checkAuth(){
+  const res = await fetch('/api/users',{
+    header:{
+      'Authorization': `bearer ${token}`
+    }
+  });
+  if (res.status ===401){
+    
+   loacalStorage.removeItem('token');
+   window.location.href ='/login.html';
+  }
+ }
+  checkAuth();
 async function api(endpoint, options={}){
 
   const res = await fetch(endpoint,{
