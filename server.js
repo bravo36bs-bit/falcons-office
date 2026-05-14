@@ -296,7 +296,7 @@ file:data.file || null,
 // جلب كل المستخدمين
 app.get('/api/users',auth, async (req, res) => {
   try {
-    const [users] = await db.promise().query(
+    const [users] = await db.query()(
       'SELECT id, username FROM users'
     );
 
