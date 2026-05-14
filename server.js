@@ -68,6 +68,10 @@ app.get('/', (req, res) => {
 
 // REGISTER
 app.post('/api/register', async (req, res) => {
+   return res.status(403).json({
+    success:false,
+    message:'Registration disabled'
+  });
   try {
     const { username, password } = req.body;
 
