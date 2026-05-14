@@ -82,7 +82,7 @@ loadMessages();
 let selectedFriend = null;
  async function checkAuth(){
   const res = await fetch('/api/users',{
-    header:{
+    headers:{
       'Authorization': `bearer ${token}`
     }
   });
@@ -162,8 +162,10 @@ async function loadMessages(){
 const token=localStorage.getItem('token');
     const res =
     await fetch('/api/messages',{
-     headers:{
-      'Authoriation': `Bearer ${token}`
+      
+     headerس:{
+      'Authorization': `Bearer ${token}`
+      
      }
     });
      
