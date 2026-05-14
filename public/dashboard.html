@@ -88,7 +88,7 @@ let selectedFriend = null;
   });
   if (res.status ===401){
     
-   loacalStorage.removeItem('token');
+   localStorage.removeItem('token');
    window.location.href ='/login.html';
   }
  }
